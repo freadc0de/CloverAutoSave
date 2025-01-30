@@ -12,6 +12,12 @@ public class CloverAutoSave extends JavaPlugin {
     private String enabledMessage;
     private String disabledMessage;
 
+    // Обновления
+    private boolean updateCheckEnabled;
+    private long updateCheckIntervalTicks;
+
+    public UpdateChecker updateChecker;
+
     @Override
     public void onEnable() {
         // Сохранение встроенного config.yml, если его нет
@@ -19,6 +25,9 @@ public class CloverAutoSave extends JavaPlugin {
 
         // Загрузка конфигурации
         loadConfigSettings();
+
+        // Регистрация команды
+        this.getCommand("autosave").setExecutor(new AutoSaveCommand(this));
 
         // Вывод сообщения о включении плагина
         getLogger().info(enabledMessage);
@@ -33,6 +42,21 @@ public class CloverAutoSave extends JavaPlugin {
                 getLogger().info(saveSuccessMessage);
             }
         }.runTaskTimer(this, saveIntervalTicks, saveIntervalTicks);
+
+        // Инициализация и запуск проверки обновлений
+        if (updateCheckEnabled) {
+            String currentVersion = this.getDescription().getVersion();
+            updateChecker = new UpdateChecker(this, currentVersion);
+            updateChecker.checkForUpdates();
+
+            // Запланировать последующие проверки обновлений
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    updateChecker.checkForUpdates();
+                }
+            }.runTaskTimerAsynchronously(this, updateCheckIntervalTicks, updateCheckIntervalTicks);
+        }
     }
 
     @Override
@@ -43,7 +67,7 @@ public class CloverAutoSave extends JavaPlugin {
     /**
      * Метод для загрузки настроек из конфигурационного файла.
      */
-    private void loadConfigSettings() {
+    public void loadConfigSettings() {
         FileConfiguration config = getConfig();
 
         // Загрузка интервала сохранения и конвертация в тики
@@ -52,7 +76,39 @@ public class CloverAutoSave extends JavaPlugin {
 
         // Загрузка сообщений из конфигурации
         saveSuccessMessage = config.getString("save-success-message", "Миры успешно сохранены.");
-        enabledMessage = config.getString("enabled-message", "AutoSavePlugin включен!");
-        disabledMessage = config.getString("disabled-message", "AutoSavePlugin отключен.");
+        enabledMessage = config.getString("enabled-message", "CloverAutoSave включен!");
+        disabledMessage = config.getString("disabled-message", "CloverAutoSave отключен.");
+
+        // Загрузка настроек обновлений
+        if (config.isConfigurationSection("update-check")) {
+            updateCheckEnabled = config.getBoolean("update-check.enabled", true);
+            int checkIntervalHours = config.getInt("update-check.check-interval-hours", 24);
+            updateCheckIntervalTicks = checkIntervalHours * 60 * 60 * 20L; // часы -> тики
+        } else {
+            updateCheckEnabled = false;
+        }
+    }
+
+    /**
+     * Перезагрузка настроек из конфигурации.
+     */
+    public void reloadPluginConfig() {
+        reloadConfig();
+        loadConfigSettings();
+
+        // Если проверка обновлений включена и UpdateChecker не инициализирован, создать новый
+        if (updateCheckEnabled && updateChecker == null) {
+            String currentVersion = this.getDescription().getVersion();
+            updateChecker = new UpdateChecker(this, currentVersion);
+            updateChecker.checkForUpdates();
+
+            // Запланировать последующие проверки обновлений
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    updateChecker.checkForUpdates();
+                }
+            }.runTaskTimerAsynchronously(this, updateCheckIntervalTicks, updateCheckIntervalTicks);
+        }
     }
 }

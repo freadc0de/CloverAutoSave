@@ -1,4 +1,19 @@
 name: CloverAutoSave
-version: 1.0
+version: 1.1
 main: com.fread.cloverautosave.CloverAutoSave
 api-version: 1.20
+
+commands:
+  autosave:
+    description: Основная команда для AutoSavePlugin.
+    usage: /autosave <reload|check>
+    aliases: [asave]
+    permission: autosave.use
+
+permissions:
+  autosave.use:
+    description: Позволяет использовать команды AutoSavePlugin.
+    default: op
+  autosave.reload:
+    description: Позволяет перезагружать конфигурацию плагина.
+    default: op
