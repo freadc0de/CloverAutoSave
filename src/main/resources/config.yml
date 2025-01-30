@@ -1,0 +1,11 @@
+# Интервал сохранения миров в секундах
+save-interval-seconds: 60
+
+# Сообщение, выводимое при успешном сохранении миров
+save-success-message: "Миры успешно сохранены."
+
+# Сообщение при включении плагина
+enabled-message: "CloverAutoSave включен!"
+
+# Сообщение при отключении плагина
+disabled-message: "CloverAutoSave отключен."

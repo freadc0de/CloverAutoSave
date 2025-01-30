@@ -1,0 +1,4 @@
+name: CloverAutoSave
+version: 1.0
+main: com.fread.cloverautosave.CloverAutoSave
+api-version: 1.20
